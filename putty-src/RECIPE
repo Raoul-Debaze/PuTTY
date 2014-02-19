@@ -15,6 +15,7 @@
 !makefile vc windows/Makefile.vc
 !makefile vcproj windows/MSVC
 !makefile cygwin windows/Makefile.cyg
+!makefile mingw windows/Makefile.mgw
 !makefile borland windows/Makefile.bor
 !makefile lcc windows/Makefile.lcc
 !makefile gtk unix/Makefile.gtk
@@ -153,6 +154,11 @@ version.o: FORCE
 	$(CC) $(COMPAT) $(XFLAGS) $(CFLAGS) $(VER) -c ../version.c
 !end
 !specialobj cygwin version
+!begin mingw
+version.o: FORCE
+	$(CC) $(COMPAT) $(XFLAGS) $(CFLAGS) $(VER) -c ../version.c
+!end
+!specialobj mingw version
 !begin borland
 version.obj: FORCE
 	bcc32 $(VER) $(CFLAGS) /c ..\version.c
@@ -197,6 +203,11 @@ CFLAGS = $(CFLAGS) /DHAS_GSSAPI /DSECURITY_WIN32
 RCFLAGS = $(RCFLAGS) $(VER)
 !end
 !begin cygwin vars
+CFLAGS += -DSECURITY_WIN32
+# XXX GNU-ism, but it's probably all right for a Cygwin/MinGW Makefile.
+RCFLAGS += $(patsubst -D%,--define %,$(VER))
+!end
+!begin mingw vars
 CFLAGS += -DSECURITY_WIN32
 # XXX GNU-ism, but it's probably all right for a Cygwin/MinGW Makefile.
 RCFLAGS += $(patsubst -D%,--define %,$(VER))
@@ -266,6 +277,15 @@ endif
 
 # Random symbols.
 !begin cygwin vars
+# _WIN32_IE is required to expose identifiers that only make sense on
+# systems with IE5+ installed, such as some arguments to SHGetFolderPath().
+# WINVER etc perform a similar function for FlashWindowEx().
+CFLAGS += -D_WIN32_IE=0x0500
+CFLAGS += -DWINVER=0x0500 -D_WIN32_WINDOWS=0x0410 -D_WIN32_WINNT=0x0500
+!end
+
+# Random symbols.
+!begin mingw vars
 # _WIN32_IE is required to expose identifiers that only make sense on
 # systems with IE5+ installed, such as some arguments to SHGetFolderPath().
 # WINVER etc perform a similar function for FlashWindowEx().
